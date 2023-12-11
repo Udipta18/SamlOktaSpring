@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:sec="http://www.springframework.org/schema/security"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/security
+        https://www.springframework.org/schema/security/spring-security.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<context:annotation-config />
+
+	<context:component-scan
+		base-package="org.springframework.security.saml"></context:component-scan>
+
+	<!-- <sec:http security="none" pattern="/baeldung/">
+	
+	</sec:http> -->
+	
+	<!-- <sec:http security="none" pattern="/baeldung/login/saml2/sso/okta"/> -->
+
+	<!-- Secured Pages With Saml Entry Point -->
+	<sec:http entry-point-ref="samlEntryPoint"
+		use-expressions="false">
+		<sec:csrf disabled="true" />
+		<!-- <sec:headers>
+			<sec:frame-options policy="SAMEORIGIN" />
+		</sec:headers> -->
+		<sec:intercept-url pattern="/auth/**"
+			access="IS_AUTHENTICATED_FULLY" />
+			<!-- <sec:intercept-url pattern="/baeldung/auth/home"
+			access="IS_AUTHENTICATED_FULLY" /> -->
+		<sec:custom-filter before="FIRST"
+			ref="metadataGeneratorFilter" />
+		<sec:custom-filter after="BASIC_AUTH_FILTER"
+			ref="samlFilter" />
+	</sec:http>
+
+	<!-- Filters For Processing Saml Messages -->
+	<bean id="samlFilter"
+		class="org.springframework.security.web.FilterChainProxy">
+		<sec:filter-chain-map request-matcher="ant">
+			<sec:filter-chain pattern="/saml/login/**"
+				filters="samlEntryPoint" />
+			<sec:filter-chain pattern="/saml/logout/**"
+				filters="samlLogoutFilter" />
+			<sec:filter-chain pattern="/saml/metadata/**"
+				filters="metadataDisplayFilter" />
+			<sec:filter-chain pattern="/saml/SSO/**" filters="samlWebSSOProcessingFilter" />
+			<!-- <sec:filter-chain pattern="/saml/SingleLogout/**"
+				filters="samlSingleLogout" /> -->
+		</sec:filter-chain-map>
+	</bean>
+
+	<!-- <bean id="samlSingleLogout"
+		class="org.springframework.security.saml.SAMLLogoutProcessingFilter">
+	</bean> -->
+
+	<bean id="samlEntryPoint"
+		class="org.springframework.security.saml.SAMLEntryPoint">
+		<property name="defaultProfileOptions">
+			<bean
+				class="org.springframework.security.saml.websso.WebSSOProfileOptions">
+				<property name="includeScoping" value="false"></property>
+			</bean>
+		</property>
+	</bean>
+	
+	<bean id="metadataDisplayFilter" class="org.springframework.security.saml.metadata.MetadataDisplayFilter"></bean>
+
+
+	<bean id="metadata"
+		class="org.springframework.security.saml.metadata.CachingMetadataManager">
+		<constructor-arg>
+			<list>
+				<bean
+					class="org.opensaml.saml2.metadata.provider.ResourceBackedMetadataProvider">
+					<constructor-arg>
+						<bean class="java.util.Timer" />
+					</constructor-arg>
+					<constructor-arg>
+						<bean class="org.opensaml.util.resource.ClasspathResource">
+							<constructor-arg value="/saml/metadata/sso.xml" />
+						</bean>
+					</constructor-arg>
+					<property name="parserPool" ref="parsePool" />
+				</bean>
+			</list>
+		</constructor-arg>
+		<property name="defaultIDP"
+			value="http://www.okta.com/exkdgfgd78ITPqgWK5d7"></property>
+	</bean>
+
+
+	<bean id="metadataGeneratorFilter"
+		class="org.springframework.security.saml.metadata.MetadataGeneratorFilter">
+		<constructor-arg>
+			<bean
+				class="org.springframework.security.saml.metadata.MetadataGenerator">
+				<property name="extendedMetadata">
+					<bean
+						class="org.springframework.security.saml.metadata.ExtendedMetadata">
+						<property name="idpDiscoveryEnabled" value="false"></property>
+						<property name="signMetadata" value="false"></property>
+
+					</bean>
+				</property>
+				<property name="entityId"
+					value="http://localhost:8081/baeldung/saml/service-provider-metadata/okta"></property>
+				<!-- <property name="requestSigned" value="false"></property>
+				<property name="wantAssertionSigned" value="false"></property>
+				<property name="nameID" value="UNSPECIFIED"></property> -->
+				<property name="includeDiscoveryExtension" value="false"></property>
+				<property name="keyManager" ref="keyManager"></property>
+
+			</bean>
+		</constructor-arg>
+	</bean>
+
+	<bean id="successRedirectHandler"
+		class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">
+		
+		<qualifier value = "saml" ></qualifier>
+
+		<property name="defaultTargetUrl" value="/home"></property>
+
+	</bean>
+
+
+	<bean id="failureRedirectHandler"
+		class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
+
+        <qualifier value = "saml" ></qualifier>
+		<property name="useForward" value="true"></property>
+		<property name="defaultFailureUrl" value="/home"></property>
+		<property name="allowSessionCreation" value="true"></property>
+
+
+	</bean>
+
+	<sec:authentication-manager
+		alias="authenticationManager">
+		<sec:authentication-provider
+			ref="samlAuthenticationProvider"></sec:authentication-provider>
+	</sec:authentication-manager>
+
+	<bean id="samlAuthenticationProvider"
+		class="org.springframework.security.saml.SAMLAuthenticationProvider">
+
+	</bean>
+	
+	<bean id="contextProvider" class="org.springframework.security.saml.context.SAMLContextProviderImpl"></bean>
+
+
+	<bean id="samlWebSSOProcessingFilter"
+		class="org.springframework.security.saml.SAMLProcessingFilter">
+		<property name="authenticationManager"
+			ref="authenticationManager"></property>
+		<property name="authenticationSuccessHandler"
+			ref="successRedirectHandler"></property>
+		<property name="authenticationFailureHandler"
+			ref="failureRedirectHandler"></property>
+
+
+	</bean>
+
+	<bean id="successLogoutHandler"
+		class="org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler">
+		<property name="defaultTargetUrl" value="/"></property>
+	</bean>
+
+	<bean id="logoutHandler"
+		class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler">
+		<property name="invalidateHttpSession" value="true"></property>
+		<property name="clearAuthentication" value="true"></property>
+	</bean>
+
+	<bean id="samlLogoutFilter"
+		class="org.springframework.security.saml.SAMLLogoutFilter">
+		<constructor-arg index="0" ref="successLogoutHandler"></constructor-arg>
+		<constructor-arg index="1" ref="logoutHandler"></constructor-arg>
+		<constructor-arg index="2" ref="logoutHandler"></constructor-arg>
+	</bean>
+
+	<bean id="samlLogoutProcessingFilter"
+		class="org.springframework.security.saml.SAMLLogoutProcessingFilter">
+		<constructor-arg index="0" ref="successLogoutHandler"></constructor-arg>
+		<constructor-arg index="1" ref="logoutHandler"></constructor-arg>
+	</bean>
+
+	<bean id="processor"
+		class="org.springframework.security.saml.processor.SAMLProcessorImpl">
+		<constructor-arg>
+			<list>
+				<ref bean="redirectBinding" />
+				<ref bean="postBinding" />
+			</list>
+		</constructor-arg>
+
+	</bean>
+
+	<bean id="webSSOprofileConsumer"
+		class="org.springframework.security.saml.websso.WebSSOProfileConsumerImpl">
+	</bean>
+
+	<bean id="webSSOprofile"
+		class="org.springframework.security.saml.websso.WebSSOProfileImpl">
+	</bean>
+
+	<bean id="hokWebSSOProfileConsumer"
+		class="org.springframework.security.saml.websso.WebSSOProfileConsumerHoKImpl">
+		 <qualifier value = "hokWebSSOprofileConsumer" />
+	</bean>
+
+	<bean id="hokWebSSOProfile"
+		class="org.springframework.security.saml.websso.WebSSOProfileConsumerHoKImpl">
+	</bean>
+
+	<bean id="ecpProfile"
+		class="org.springframework.security.saml.websso.WebSSOProfileECPImpl">
+	</bean>
+
+	<bean id="logoutProfile"
+		class="org.springframework.security.saml.websso.SingleLogoutProfileImpl">
+	</bean>
+
+	<bean id="postBinding"
+		class="org.springframework.security.saml.processor.HTTPPostBinding">
+		<constructor-arg ref="parsePool"></constructor-arg>
+		<constructor-arg ref="velocityEngine"></constructor-arg>
+
+	</bean>
+
+	<bean id="redirectBinding"
+		class="org.springframework.security.saml.processor.HTTPRedirectDeflateBinding">
+		<constructor-arg ref="parsePool"></constructor-arg>
+	</bean>
+
+	<bean id="samlBootstrap" class="org.springframework.security.saml.SAMLBootstrap">
+	</bean>
+
+	<bean id="velocityEngine"
+		class="org.springframework.security.saml.util.VelocityFactory"
+
+		factory-method="getEngine">
+	</bean>
+
+	<bean id="parsePool"
+		class="org.opensaml.xml.parse.StaticBasicParserPool"
+		init-method="initialize"></bean>
+
+	<bean id="parsePoolHolder"
+		class="org.springframework.security.saml.parser.ParserPoolHolder">
+	</bean>
+
+	<bean id="samlLogger"
+		class="org.springframework.security.saml.log.SAMLDefaultLogger">
+		<property name="logErrors" value="true"></property>
+	</bean>
+	
+	<bean id="keyManager" class="org.springframework.security.saml.key.JKSKeyManager">
+	   <constructor-arg  value="classpath:/saml/saml-keystore.jks"></constructor-arg>
+	   <constructor-arg type="java.lang.String" value="baeldungsamlokta"></constructor-arg>
+	  <constructor-arg>
+	    <map>
+	     <entry key="baeldungspringsaml" value="baeldungsamlokta">
+	     
+	     </entry>
+	    </map>
+	  </constructor-arg>
+	  <constructor-arg type="java.lang.String"  value="baeldungspringsaml"></constructor-arg>
+	</bean>
+
+
+
+</beans>
