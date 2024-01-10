@@ -6,7 +6,7 @@ import org.springframework.context.annotation.ImportResource;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @SpringBootApplication
-@ImportResource({"classpath:application_config2.xml"})
+@ImportResource({"classpath:application_config2.xml"}) 
 public class SamlxmlApplication {
 
 	public static void main(String[] args) {

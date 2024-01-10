@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <md:EntityDescriptor
-	entityID="http://www.okta.com/exkdgfgd78ITPqgWK5d7"
-	xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata">
+	xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
+	entityID="http://www.okta.com/exkdgfgd78ITPqgWK5d7">
 	<md:IDPSSODescriptor
 		WantAuthnRequestsSigned="false"
 		protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
@@ -24,8 +23,7 @@
 						j2FdcerD5iic6A6Fw9Uj94FlYyrobAx6fBsHzlhKfL4NF5/T1szrqirdRjVwNaCaVFBV8UVhfEmj
 						rXeLKDXTe20hm+k/5a49j8UK95PHaNJiGp2FcrX9hqHQc2wJfxVgpCiYQWjcbFzoYg72uwib2HfD
 						91POTxPdt6Ctrw95+p4GuX1mgd+WjXG9w37dMcTYJY9pYzV2xTIssESIGmdl/rJlSqMJ2zv6vCjw
-						FixhYZTEWklP5v2cckFxaLS5NGXOhrddXT4jSQ==
-					</ds:X509Certificate>
+						FixhYZTEWklP5v2cckFxaLS5NGXOhrddXT4jSQ==</ds:X509Certificate>
 				</ds:X509Data>
 			</ds:KeyInfo>
 		</md:KeyDescriptor>

@@ -29,7 +29,7 @@
 		<!-- <sec:headers>
 			<sec:frame-options policy="SAMEORIGIN" />
 		</sec:headers> -->
-		<sec:intercept-url pattern="/auth/**"
+		<sec:intercept-url pattern="/**"
 			access="IS_AUTHENTICATED_FULLY" />
 			<!-- <sec:intercept-url pattern="/baeldung/auth/home"
 			access="IS_AUTHENTICATED_FULLY" /> -->
@@ -76,6 +76,8 @@
 		class="org.springframework.security.saml.metadata.CachingMetadataManager">
 		<constructor-arg>
 			<list>
+			<bean class="org.springframework.security.saml.metadata.ExtendedMetadataDelegate">
+                <constructor-arg>
 				<bean
 					class="org.opensaml.saml2.metadata.provider.ResourceBackedMetadataProvider">
 					<constructor-arg>
@@ -83,15 +85,23 @@
 					</constructor-arg>
 					<constructor-arg>
 						<bean class="org.opensaml.util.resource.ClasspathResource">
-							<constructor-arg value="/saml/metadata/sso.xml" />
+							<constructor-arg value="/saml/metadata/ad.xml" />
 						</bean>
 					</constructor-arg>
 					<property name="parserPool" ref="parsePool" />
 				</bean>
+			 </constructor-arg>	
+			 <constructor-arg>
+                    <bean class="org.springframework.security.saml.metadata.ExtendedMetadata">
+                    </bean>
+                </constructor-arg>
+                <property name="metadataTrustCheck" value="false"/>
+               </bean> 
 			</list>
 		</constructor-arg>
+		<!-- saml.idp https://sts.windows.net/f215dd58-2250-4dcb-89a1-e0c9bf43e3bd/,http://www.okta.com/exkdgfgd78ITPqgWK5d7 -->
 		<property name="defaultIDP"
-			value="http://www.okta.com/exkdgfgd78ITPqgWK5d7"></property>
+			value="https://sts.windows.net/f215dd58-2250-4dcb-89a1-e0c9bf43e3bd/"></property>
 	</bean>
 
 
@@ -108,8 +118,9 @@
 
 					</bean>
 				</property>
+				<!-- saml.sp https://login.microsoftonline.com/f215dd58-2250-4dcb-89a1-e0c9bf43e3bd/saml2,http://localhost:8081/baeldung/saml/service-provider-metadata/okta -->
 				<property name="entityId"
-					value="http://localhost:8081/baeldung/saml/service-provider-metadata/okta"></property>
+					value="https://login.microsoftonline.com/f215dd58-2250-4dcb-89a1-e0c9bf43e3bd/saml2"></property>
 				<!-- <property name="requestSigned" value="false"></property>
 				<property name="wantAssertionSigned" value="false"></property>
 				<property name="nameID" value="UNSPECIFIED"></property> -->
@@ -262,16 +273,16 @@
 	</bean>
 	
 	<bean id="keyManager" class="org.springframework.security.saml.key.JKSKeyManager">
-	   <constructor-arg  value="classpath:/saml/saml-keystore.jks"></constructor-arg>
+	   <constructor-arg  value="classpath:/saml/saml-keystore-new.jks"></constructor-arg>
 	   <constructor-arg type="java.lang.String" value="baeldungsamlokta"></constructor-arg>
 	  <constructor-arg>
 	    <map>
-	     <entry key="baeldungspringsaml" value="baeldungsamlokta">
+	     <entry key="spring" value="baeldungsamlokta">
 	     
 	     </entry>
 	    </map>
 	  </constructor-arg>
-	  <constructor-arg type="java.lang.String"  value="baeldungspringsaml"></constructor-arg>
+	  <constructor-arg type="java.lang.String"  value="spring"></constructor-arg>
 	</bean>
 
 
