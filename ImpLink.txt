@@ -1,0 +1,11 @@
+login url :https://login.microsoftonline.com/f215dd58-2250-4dcb-89a1-e0c9bf43e3bd/saml2
+Microsoft Entra Identifier: https://sts.windows.net/f215dd58-2250-4dcb-89a1-e0c9bf43e3bd/
+Logout URL: https://login.microsoftonline.com/f215dd58-2250-4dcb-89a1-e0c9bf43e3bd/saml2
+
+
+Identifier (Entity ID)
+https://login.microsoftonline.com/f215dd58-2250-4dcb-89a1-e0c9bf43e3bd/saml2
+
+
+Reply URL (Assertion Consumer Service URL)
+http://localhost:9091/saml/SSO
